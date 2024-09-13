@@ -30,7 +30,7 @@
 // #define RUN_FULL_FILL_TEST
 // #define RUN_BYTE_MASKING_TEST 
 // #define RUN_SMALL_REGIONS_TEST 
-#define RUN_BW_TEST 
+// #define RUN_BW_TEST 
 //
 // Hold local memory details for one engine
 //
@@ -885,9 +885,7 @@ testLocalMemParams(
         // Get the maximum burst size for the engine.
         uint64_t r = csrEngRead(s_csr_handle, e, 0);
         s_eng_bufs[e].data_byte_width = r >> 56;
-        //s_eng_bufs[e].max_burst_size = r & 0x7fff;
-        // YC manually set max burst size to 64
-        s_eng_bufs[e].max_burst_size = 64;
+        s_eng_bufs[e].max_burst_size = r & 0x7fff;
         s_eng_bufs[e].natural_bursts = (r >> 15) & 1;
         s_eng_bufs[e].ordered_read_responses = (r >> 39) & 1;
         s_eng_bufs[e].eng_type = (r >> 35) & 7;
@@ -960,9 +958,9 @@ testLocalMemParams(
     // have the same max. burst size.
     uint64_t all_eng_mask = ((uint64_t)1 << num_engines) - 1;
     uint64_t burst_size = 1;
-    u_int32_t verbosity = 1;
-    while (burst_size <= s_eng_bufs[0].max_burst_size)
-    // while (burst_size <= 4)
+    u_int32_t verbosity = 0;
+    // while (burst_size <= s_eng_bufs[0].max_burst_size)
+    while (burst_size <= 4)
     {
         printf("\nTesting burst size %ld:\n", burst_size);
         int ms = 10;
@@ -977,18 +975,18 @@ testLocalMemParams(
             runBandwidth(all_eng_mask, ms, verbosity);
 
             // Write
-            // for (uint32_t e = 0; e < num_engines; e += 1)
-            // {
-            //     configBandwidth(e, burst_size, false, true);
-            // }
-            // runBandwidth(all_eng_mask, ms, verbosity);
+            for (uint32_t e = 0; e < num_engines; e += 1)
+            {
+                configBandwidth(e, burst_size, false, true);
+            }
+            runBandwidth(all_eng_mask, ms, verbosity);
 
             // Read+Write
-            // for (uint32_t e = 0; e < num_engines; e += 1)
-            // {
-            //     configBandwidth(e, burst_size, true, true);
-            // }
-            // runBandwidth(all_eng_mask, ms, verbosity);
+            for (uint32_t e = 0; e < num_engines; e += 1)
+            {
+                configBandwidth(e, burst_size, true, true);
+            }
+            runBandwidth(all_eng_mask, ms, verbosity);
             if (ms < 50) {
                 ms += 5;
             } else if (ms < 1*1000) {
